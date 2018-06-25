@@ -27,6 +27,8 @@ from .configuration import Configuration
 _LOGGER = logging.getLogger('thoth.user_api.utils')
 _RSYSLOG_HOST = os.getenv('RSYSLOG_HOST')
 _RSYSLOG_PORT = os.getenv('RSYSLOG_PORT')
+_PROMETHEUS_PUSHGATEWAY_HOST = os.getenv('PROMETHEUS_PUSHGATEWAY_HOST')
+_PROMETHEUS_PUSHGATEWAY_PORT = os.getenv('PROMETHEUS_PUSHGATEWAY_PORT')
 
 
 def _set_env_var(env_config: list, name: str, value: str) -> None:
@@ -133,7 +135,11 @@ def run_analyzer(image: str, analyzer: str, debug: bool=False, timeout: int=None
             "THOTH_REGISTRY_CREDENTIALS",
             f"{registry_user}:{registry_password}"
         )
-
+    
+     if _PROMETHEUS_PUSHGATEWAY_HOST and _PROMETHEUS_PUSHGATEWAY_PORT:
+        _set_env_var(template['spec']['containers'][0]['env'], 'PROMETHEUS_PUSHGATEWAY_HOST', _PROMETHEUS_PUSHGATEWAY_HOST)
+        _set_env_var(template['spec']['containers'][0]['env'], 'PROMETHEUS_PUSHGATEWAY_PORT', _PROMETHEUS_PUSHGATEWAY_PORT)
+        
     _LOGGER.debug("Requesting to run analyzer %r with payload %s", analyzer, template)
     return _do_run_pod(template, Configuration.THOTH_MIDDLETIER_NAMESPACE)
 
